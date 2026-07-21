@@ -53,17 +53,46 @@ Open `data/countries.js` and add/adjust entries:
 ```
 Scores are game-flavor (not official indices) — tune them so matches feel fun.
 
-## Multi-device sync (optional)
-By default each device keeps its own list in localStorage. Perfect for **kiosk
-mode**: run the app on one laptop/tablet that teams take turns entering on, and
-the host reveals from the same device.
+## Multi-device sync (phone → host screen)
+The app now syncs through **Supabase** (free, no server code — your Vercel free
+account is untouched). Team phones submit and the host screen updates live.
 
-If you need team phones to submit to a shared host screen, add a small backend:
-- **Supabase** (easiest, no server code): create a `teams` table, drop in the
-  `@supabase/supabase-js` client, and swap the `load/save` functions in `app.js`
-  for Supabase reads/writes with a realtime subscription.
-- **Vercel KV / Postgres**: add a serverless route under `/api` and call it from
-  `load/save`. Requires converting to a small Next.js or API-routes project.
+If you leave the keys in `data/config.js` blank, the app falls back to
+single-device **localStorage** mode (kiosk: one device enters and reveals).
+
+### One-time setup (~2 minutes)
+1. Create a free account at https://supabase.com and make a new project.
+2. In the project, open **SQL Editor** and run this:
+
+   ```sql
+   create table teams (
+     id      text primary key,
+     data    jsonb not null,
+     created int8  not null
+   );
+   -- This is a fun party game, so allow anonymous read/write:
+   alter table teams enable row level security;
+   create policy "public read"   on teams for select using (true);
+   create policy "public insert" on teams for insert with check (true);
+   create policy "public delete" on teams for delete using (true);
+   ```
+
+3. Enable realtime for the table: **Database → Replication** (or **Realtime**)
+   → add the `teams` table so the host screen refreshes automatically.
+4. Open **Project Settings → API** and copy the **Project URL** and the
+   **anon public** key.
+5. Paste them into `data/config.js`:
+
+   ```js
+   window.SB_URL = "https://YOUR-PROJECT.supabase.co";
+   window.SB_KEY = "eyJhbGci...your anon public key...";
+   ```
+
+6. Commit + push (or `vercel --prod`). Now every device sees the same list.
+
+> The **anon public** key is safe to ship in the browser — that's what it's for.
+> Because anyone with the link can write, keep the URL private to your event and
+> use the Host **Clear all** button to reset between rounds.
 
 ## Files
 | File | Purpose |

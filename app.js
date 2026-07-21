@@ -5,15 +5,48 @@
   var STORE_KEY = "ecosystem_submissions_v1";
   var app = document.getElementById("app");
 
-  /* ---------- storage ---------- */
-  function load() {
+  /* ---------- storage (shared cloud via Supabase, localStorage fallback) ---------- */
+  var TABLE = "teams";
+  var USE_CLOUD = !!(window.SB_URL && window.SB_KEY && window.supabase);
+  var sb = USE_CLOUD ? window.supabase.createClient(window.SB_URL, window.SB_KEY) : null;
+  var cache = []; // in-memory copy the views render from
+
+  function lsLoad() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
     catch (e) { return []; }
   }
-  function save(list) { localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
-  function addTeam(t) { var l = load(); l.push(t); save(l); }
-  function removeTeam(id) { save(load().filter(function (x) { return x.id !== id; })); }
-  function getTeam(id) { return load().filter(function (x) { return x.id === id; })[0]; }
+  function lsSave(list) { localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
+
+  // Synchronous reads used by the views — always served from the cache.
+  function load() { return cache.slice(); }
+  function getTeam(id) { return cache.filter(function (x) { return x.id === id; })[0]; }
+
+  // Pull the shared list into the cache. Returns a promise.
+  function fetchAll() {
+    if (!USE_CLOUD) { cache = lsLoad(); return Promise.resolve(); }
+    return sb.from(TABLE).select("id,data,created").order("created", { ascending: false })
+      .then(function (res) {
+        if (res.error) { toast("Load error — check config"); return; }
+        cache = (res.data || []).map(function (r) { return r.data; });
+      });
+  }
+
+  function addTeam(t) {
+    if (!USE_CLOUD) { var l = lsLoad(); l.push(t); lsSave(l); return fetchAll(); }
+    return sb.from(TABLE).insert({ id: t.id, data: t, created: t.created })
+      .then(function (res) { if (res.error) { toast("Save failed"); } return fetchAll(); });
+  }
+
+  function removeTeam(id) {
+    if (!USE_CLOUD) { lsSave(lsLoad().filter(function (x) { return x.id !== id; })); return fetchAll(); }
+    return sb.from(TABLE).delete().eq("id", id).then(function () { return fetchAll(); });
+  }
+
+  function clearAll() {
+    if (!USE_CLOUD) { lsSave([]); return fetchAll(); }
+    return sb.from(TABLE).delete().neq("id", "").then(function () { return fetchAll(); });
+  }
+
   function uid() { return "t" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36); }
 
   /* ---------- helpers ---------- */
@@ -88,7 +121,11 @@
         '</div>' +
         '<button class="btn block" id="submitBtn">✅ Submit team</button>' +
       '</div>' +
-      '<div class="panel"><p class="sub" style="margin:0">Submissions are saved on this device. The Host tab reads the same list.</p></div>';
+      '<div class="panel"><p class="sub" style="margin:0">' +
+        (USE_CLOUD
+          ? "Submissions sync to every device in real time — the host screen updates automatically."
+          : "Single-device mode: submissions are saved only on this device. Add Supabase keys in data/config.js to sync.") +
+      '</p></div>';
 
     var sliders = { trust: get("trust"), env: get("env"), econ: get("econ") };
     function get(id) { return document.getElementById("sl_" + id); }
@@ -115,9 +152,13 @@
         personMoney: document.getElementById("rpMoney").value.trim(),
         created: Date.now()
       };
-      addTeam(team);
-      toast("Submitted! ✔");
-      location.hash = "#host";
+      var btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+      addTeam(team).then(function () {
+        toast("Submitted! ✔");
+        location.hash = "#host";
+      });
     });
   }
 
@@ -168,12 +209,14 @@
 
     var cb = document.getElementById("clearBtn");
     if (cb) cb.addEventListener("click", function () {
-      if (confirm("Delete ALL submitted teams?")) { save([]); viewHost(); toast("Cleared"); }
+      if (confirm("Delete ALL submitted teams?")) { clearAll().then(function () { viewHost(); toast("Cleared"); }); }
     });
-    document.getElementById("refreshBtn").addEventListener("click", viewHost);
+    document.getElementById("refreshBtn").addEventListener("click", function () {
+      fetchAll().then(viewHost);
+    });
     Array.prototype.forEach.call(document.querySelectorAll("[data-del]"), function (btn) {
       btn.addEventListener("click", function () {
-        removeTeam(btn.getAttribute("data-del")); viewHost(); toast("Removed");
+        removeTeam(btn.getAttribute("data-del")).then(function () { viewHost(); toast("Removed"); });
       });
     });
   }
@@ -262,5 +305,16 @@
   }
 
   window.addEventListener("hashchange", router);
-  router();
+
+  // Load the shared list, render, then listen for changes from other devices.
+  fetchAll().then(function () {
+    router();
+    if (USE_CLOUD) {
+      sb.channel("teams-changes")
+        .on("postgres_changes", { event: "*", schema: "public", table: TABLE }, function () {
+          fetchAll().then(router);
+        })
+        .subscribe();
+    }
+  });
 })();
