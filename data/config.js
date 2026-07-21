@@ -7,5 +7,5 @@
  *
  * Leave BOTH blank to run in single-device mode (localStorage only).
  * ------------------------------------------------------------------------- */
-window.SB_URL = "";
-window.SB_KEY = "";
+window.SB_URL = "https://jbboalpehmcmmwwdnbnf.supabase.co";
+window.SB_KEY = "sb_publishable_OI64BmJSDzaYRaUBSZI5yQ_9SgOgm-i";
