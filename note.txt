@@ -1,0 +1,87 @@
+========================================================================
+ ECO-SYSTEM BOARD GAME — WEB APP  (Reviewed Plan)
+========================================================================
+
+--- ORIGINAL IDEA (kept for reference) ---------------------------------
+Board game eco-system with three values: Trust, Environment, Economic.
+Each value = 10 points max.
+For a set of points, show which real countries might have similar points.
+
+EX:
+Country  Trust  Environment  Economic  Archetype
+Norway   9      8            9         The Balanced Powerhouse
+USA      5      4            10        The Economic Engine
+Brazil   6      3            6         The Developing Frontier
+Japan    8      6            8
+
+Goal: a web app so each group's admin can
+  - submit their team's eco-system values (each value max 10, app sums them)
+  - submit their team's richest person's name + money ($)
+Then the event host reveals:
+  - 3~4 real-life countries with the closest points (+ an archetype label)
+  - the team's rich person's name and money
+Company already uses Vercel:  https://survive-island.vercel.app
+Question: can we build this?  -> YES.
+
+========================================================================
+ REFINED PLAN
+========================================================================
+
+1. VALUES  (each 0-10)
+   - Trust
+   - Environment
+   - Economic
+   - Sum = Trust + Environment + Economic  (0-30), shown after submit.
+
+2. RICH PERSON  (decision: free text name + small game money)
+   - Team enters a NAME (free text) and a small MONEY amount ($, e.g. a few
+     hundred — easy to count during play). Shown as a plain "$" amount.
+   - App just displays it on a styled card. Money does NOT affect matching.
+
+   NOTE: country matching is based ONLY on the eco-system values
+   (Trust / Environment / Economic). The rich person / money is display-only.
+
+3. COUNTRY MATCHING  (decision: hand-authored, game-flavor)
+   - Built-in dataset of ~40 countries, each with Trust/Environment/Economic
+     scored 0-10 (curated for game feel, not official indices) + an Archetype.
+   - Match = smallest Euclidean distance across the 3 values.
+   - Show the 4 closest countries, nearest first, with their archetype.
+
+4. SCREENS
+   - Landing (#)          : pick "Team Submit" or "Host".
+   - Team Submit (#submit): team name, 3 sliders (0-10), live sum,
+                            rich person name + money -> Submit.
+   - Host (#host)         : live list of all submitted teams; click a team
+                            to reveal matched countries + rich-person card.
+                            Includes a big "Present" reveal for projecting.
+
+5. DATA / STORAGE
+   - Default: browser localStorage (kiosk mode = one shared laptop/tablet the
+     teams take turns on, or the host's machine). Zero backend, works offline.
+   - Optional multi-device sync: add Supabase (client-side, no server code) or
+     Vercel KV + a serverless route. See README for how.
+
+6. TECH
+   - Zero-build static app: HTML + CSS + vanilla JS. No install step needed.
+   - Deploys to Vercel as a static site with no configuration.
+
+========================================================================
+ CAN WE USE VERCEL.APP?  -> YES
+========================================================================
+"*.vercel.app" is the free subdomain Vercel gives every project (that is all
+survive-island.vercel.app is). Steps:
+  1. Put this folder in a GitHub repo.
+  2. vercel.com -> sign in with GitHub -> Add New -> Project -> import repo.
+  3. It builds and gives you  https://<your-name>.vercel.app
+  4. Every git push auto-redeploys. Free (Hobby) tier is plenty for an event.
+Or fastest: install the Vercel CLI and run `vercel` in this folder.
+
+========================================================================
+ FILES
+========================================================================
+  index.html        - the app (single page, hash-routed)
+  styles.css        - styling
+  data/countries.js - the ~40-country reference dataset
+  app.js            - logic (matching, storage, rendering)
+  README.md         - how to run + deploy to Vercel
+  vercel.json       - static deploy config
