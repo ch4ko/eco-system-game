@@ -87,5 +87,22 @@ window.COUNTRIES = [
   { name: "Senegal",       flag: "🇸🇳", trust: 4, environment: 5, economic: 4, archetype: "The Rising Frontier" },
   { name: "Tunisia",       flag: "🇹🇳", trust: 4, environment: 5, economic: 5, archetype: "The Crossroads Economy" },
   { name: "Fiji",          flag: "🇫🇯", trust: 5, environment: 7, economic: 4, archetype: "The Eco Pioneer" },
-  { name: "Papua New Guinea", flag: "🇵🇬", trust: 3, environment: 5, economic: 4, archetype: "The Raw Potential" }
+  { name: "Papua New Guinea", flag: "🇵🇬", trust: 3, environment: 5, economic: 4, archetype: "The Raw Potential" },
+
+  // --- High environment + high trust, modest economy (the "Bhutan corner") ---
+  { name: "Bhutan",          flag: "🇧🇹", trust: 8, environment: 10, economic: 3, archetype: "The Happiness Kingdom" },
+  { name: "Palau",           flag: "🇵🇼", trust: 7, environment: 9, economic: 4, archetype: "The Reef Keeper" },
+  { name: "Vanuatu",         flag: "🇻🇺", trust: 6, environment: 8, economic: 3, archetype: "The Eco Pioneer" },
+  { name: "Belize",          flag: "🇧🇿", trust: 5, environment: 8, economic: 4, archetype: "The Eco Pioneer" },
+  { name: "Suriname",        flag: "🇸🇷", trust: 4, environment: 9, economic: 4, archetype: "The Forest Vault" },
+  { name: "Guyana",          flag: "🇬🇾", trust: 4, environment: 8, economic: 5, archetype: "The Forest Vault" },
+  { name: "Samoa",           flag: "🇼🇸", trust: 7, environment: 7, economic: 4, archetype: "The Island Commons" },
+  { name: "Solomon Islands", flag: "🇸🇧", trust: 5, environment: 7, economic: 3, archetype: "The Island Commons" },
+  { name: "Nepal",           flag: "🇳🇵", trust: 6, environment: 7, economic: 3, archetype: "The Mountain Guardian" },
+  { name: "Kyrgyzstan",      flag: "🇰🇬", trust: 4, environment: 6, economic: 4, archetype: "The Mountain Guardian" },
+  { name: "Laos",            flag: "🇱🇦", trust: 5, environment: 7, economic: 3, archetype: "The Quiet Highlands" },
+  { name: "Madagascar",      flag: "🇲🇬", trust: 4, environment: 7, economic: 3, archetype: "The Forest Vault" },
+  { name: "Cabo Verde",      flag: "🇨🇻", trust: 6, environment: 6, economic: 4, archetype: "The Quiet Achiever" },
+  { name: "Namibia",         flag: "🇳🇦", trust: 5, environment: 6, economic: 5, archetype: "The Quiet Achiever" },
+  { name: "Malawi",          flag: "🇲🇼", trust: 5, environment: 5, economic: 3, archetype: "The Rising Frontier" }
 ];
